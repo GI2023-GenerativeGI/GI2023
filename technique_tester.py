@@ -237,32 +237,6 @@ if __name__ == "__main__":
     image = Image.new("RGBA", DIM, background)
 
     # drunkardsWalk(image)
-    WolframCA(image)
-    image.save("dithering.orig.png")
-
-    new = convert_grayscale(image)
-    new.save("dithering.grayscale.png")
-
-    new = convert_halftoning(image)
-    new.save("dithering.halftone.png")
-
-    new = convert_dithering(image)
-    new.save("dithering.dithering.png")
-
-    new = convert_primary(image)
-    new.save("dithering.primary.png")
-
-    #image.save("drunk.png")
-
-    #WolframCA(image)
-    #image.save("wolfram.png")
-
-    #stippledBG(image, "red", DIM)
-    #image.save("temp.png")
-    #image = simpleDither(image)
-    #image.save("temp.dither.png")
-    
-    #flowField2(image, random.choice(palettes), 'curvy', random.randrange(200, 600), random.randrange(2, 5))
-    #image.save("ff.png")
-    circlePacking(image, random.choice(palettes), random.randrange(10, 30))
-    image.save("circles.png")
+    WolframCA(image, random.choice(palettes))
+    image = RGBShift(image)
+    image.save("temp.rgb.png")

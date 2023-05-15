@@ -677,3 +677,53 @@ def convert_primary(image):
 
     # Return new image
     return new
+
+# Perform an RGB color shift 
+# Separates image into 3 different layers, shifts each by a 
+# parameterized amount, and stitches back together
+# based on: https://stackoverflow.com/questions/51325224/python-pil-image-split-to-rgb
+def RGBShift(image, alphaR=0.5, alphaG=0.5, alphaB=0.5, 
+             rXoff=-5, rYoff=-5,
+             gXoff=0, gYoff=-5,
+             bXoff=5, bYoff=5):
+
+    # split into separate colors
+    data = image.getdata()
+    r = [(d[0], 0, 0, 255) for d in data]
+    g = [(0, d[0], 0, 255) for d in data]
+    b = [(0, 0, d[0], 255) for d in data]
+
+    for d in r:
+        if d == (0, 0, 0, 255):
+            d = (0, 0, 0, 0)
+    for d in g:
+        if d == (0, 0, 0, 255):
+            d = (0, 0, 0, 0)
+    for d in b:
+        if d == (0, 0, 0, 255):
+            d = (0, 0, 0, 0)
+
+    temp_image = Image.new("RGBA", DIM, BACKGROUND)
+
+    # https://stackoverflow.com/questions/37584977/translate-image-using-pil
+    # [2] - left/right
+    # [5] - up/down
+
+    # red channel
+    temp_image.putdata(r)
+    temp_image = temp_image.transform(temp_image.size, Image.AFFINE, (1, 0, rXoff, 0, 1, rYoff))
+    image = Image.blend(image, temp_image, alphaR)
+
+    # green channel
+    temp_image.putdata(g)
+    temp_image = temp_image.transform(temp_image.size, Image.AFFINE, (1, 0, gXoff, 0, 1, gYoff))
+    image = Image.blend(image, temp_image, alphaG)
+
+    # # blue channel
+    temp_image.putdata(b)
+    temp_image = temp_image.transform(temp_image.size, Image.AFFINE, (1, 0, bXoff, 0, 1, bYoff))
+    image = Image.blend(image, temp_image, alphaB)
+
+    return image
+
+

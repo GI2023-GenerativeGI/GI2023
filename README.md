@@ -185,3 +185,20 @@ Executes a cellular automata algorithm, where the input cell rules are currently
 #### Grammar Specification
 
 * `'wolfram-ca:#palette#'`
+
+### RGB Shift
+
+Separates out each color channel and then reapplies to the base image with a transparency and offset to provide a simple glitch effect.
+
+#### Grammar Specification:
+
+* `'rgb-shift:#alphaR#,#alphaG#,#alphaB#,#rXoff#,#rYoff#,#gXoff#,#gYoff#,#bXoff#,#bYoff#',`
+  * `'alphaR': [str(x) for x in np.arange(0.0, 1.0, 0.01)], `
+  * `'alphaG': [str(x) for x in np.arange(0.0, 1.0, 0.01)],`
+  * `'alphaB': [str(x) for x in  np.arange(0.0, 1.0, 0.01)],`
+  * `'rXoff': [str(x) for x in range(-10,10)],`
+  * `'rYoff': [str(x) for x in range(-10,10)],`
+  * `'gXoff': [str(x) for x in range(-10,10)],`
+  * `'gYoff': [str(x) for x in range(-10,10)],`
+  * `'bXoff': [str(x) for x in range(-10,10)],`
+  * `'bYoff': [str(x) for x in range(-10,10)],`

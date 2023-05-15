@@ -18,7 +18,8 @@ rules = {
         'pixel-sort:#pixel-sort-angle#:#pixel-sort-interval#:#pixel-sort-sorting#:#pixel-sort-randomness#:#pixel-sort-charlength#:#pixel-sort-lowerthreshold#:#pixel-sort-upperthreshold#',
         'drunkardsWalk:#palette#', 'dither:#ditherType#',
         'flow-field-2:#palette#:#flow-field-2-type#:#flow-field-2-noisescale#:#flow-field-2-resolution#',
-        'circle-packing:#palette#:#circle-packing-limit#'
+        'circle-packing:#palette#:#circle-packing-limit#',
+        'rgb-shift:#alphaR#,#alphaG#,#alphaB#,#rXoff#,#rYoff#,#gXoff#,#gYoff#,#bXoff#,#bYoff#',
     ],
     # pixel sort parameters
     'pixel-sort-angle': [str(x) for x in range(0, 360)],
@@ -42,5 +43,15 @@ rules = {
     'palette': [x for x in palettes],
     # dither parameters
     'ditherType': ['grayscale', 'halftone', 'dither', 'primaryColors', 'simpleDither'],
+    # rgb shift parameters
+    'alphaR': [str(x) for x in np.arange(0.0, 1.0, 0.01)], 
+    'alphaG': [str(x) for x in np.arange(0.0, 1.0, 0.01)],
+    'alphaB': [str(x) for x in  np.arange(0.0, 1.0, 0.01)],
+    'rXoff': [str(x) for x in range(-5,5)],
+    'rYoff': [str(x) for x in range(-5,5)],
+    'gXoff': [str(x) for x in range(-5,5)],
+    'gYoff': [str(x) for x in range(-5,5)],
+    'bXoff': [str(x) for x in range(-5,5)],
+    'bYoff': [str(x) for x in range(-5,5)],
 }
 grammar = tracery.Grammar(rules)
