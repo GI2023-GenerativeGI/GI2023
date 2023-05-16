@@ -236,7 +236,6 @@ def convert_primary(image):
 if __name__ == "__main__":
     image = Image.new("RGBA", DIM, background)
 
-    # drunkardsWalk(image)
     WolframCA(image, random.choice(palettes))
-    image = RGBShift(image)
+    image = noiseMap(image, random.choice(palettes), random.uniform(0.01, 0.2), random.uniform(0.01, 0.2), random.uniform(0.2,1.0))
     image.save("temp.rgb.png")

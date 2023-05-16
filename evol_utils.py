@@ -185,6 +185,11 @@ def evaluate_individual(g):
                        _technique[4])
         elif _technique[0] == 'circle-packing':
             circlePacking(g.image, _technique[1], _technique[2])
+        elif _technique[0] == 'rgb-shift':
+            g.image = RGBShift(g.image, float(_technique[1]), float(_technique[2]), float(_technique[3]), float(_technique[4]), float(_technique[5]), float(_technique[6]), float(_technique[7]), float(_technique[8]), float(_technique[9]))
+        elif _technique[0] == 'noise-map':
+            g.image = noiseMap(g.image, _technique[1], float(_technique[2]), float(_technique[3]), float(_technique[4]))
+
 
     return g
 
