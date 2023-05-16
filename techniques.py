@@ -1,4 +1,4 @@
-from PIL import Image, ImageDraw, ImageChops
+from PIL import Image, ImageDraw, ImageChops, ImageColor
 import opensimplex
 from perlin_noise import PerlinNoise
 from pixelsort import pixelsort
@@ -726,4 +726,29 @@ def RGBShift(image, alphaR=0.5, alphaG=0.5, alphaB=0.5,
 
     return image
 
+# Overlay a noise map to the existing canvas
+def noiseMap(image, palette, noiseX, noiseY, alpha):
+    temp_image = Image.new("RGBA", DIM, BACKGROUND)
+    palette = getPaletteValues(palette)
+    random.shuffle(palette)
 
+    bands = []
+    for i in range(len(palette)):
+        bands.append(p5map(i, 0, len(palette)-1, -0.9, 0.9))
+
+    width, height = image.size
+
+    # loop over image and apply a value based on an even distribution across the palette
+    for y in range(height):
+        for x in range(width):
+            n = opensimplex.noise2(x=x*noiseX, y=y*noiseY)
+
+            # map to a color band between the opensimplex value on [-1,1]
+            col = palette[-1]
+            for b in range(len(bands)):
+                if n < bands[b]:
+                    col = palette[b]
+                    break
+
+            temp_image.putpixel((x, y), ImageColor.getrgb(col))
+    return Image.blend(image, temp_image, alpha)

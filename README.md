@@ -202,3 +202,14 @@ Separates out each color channel and then reapplies to the base image with a tra
   * `'gYoff': [str(x) for x in range(-10,10)],`
   * `'bXoff': [str(x) for x in range(-10,10)],`
   * `'bYoff': [str(x) for x in range(-10,10)],`
+
+### Noisemap
+
+Overlays a noise map (based on Simplex noise) onto the existing canvas.
+
+#### Grammar Specification
+
+  * `'noise-map:#palette#,#noiseX#,#noiseY#,#noiseAlpha#',`
+    *  `'noiseX': [str(x) for x in np.arange(0.001, 0.25)],`
+    *  `'noiseY': [str(x) for x in np.arange(0.001, 0.25)],`
+    *  `'noiseAlpha': [str(x) for x in np.arange(0.0, 1.0)],`

@@ -19,7 +19,8 @@ rules = {
         'drunkardsWalk:#palette#', 'dither:#ditherType#',
         'flow-field-2:#palette#:#flow-field-2-type#:#flow-field-2-noisescale#:#flow-field-2-resolution#',
         'circle-packing:#palette#:#circle-packing-limit#',
-        'rgb-shift:#alphaR#,#alphaG#,#alphaB#,#rXoff#,#rYoff#,#gXoff#,#gYoff#,#bXoff#,#bYoff#',
+        'rgb-shift:#alphaR#:#alphaG#:#alphaB#:#rXoff#:#rYoff#:#gXoff#:#gYoff#:#bXoff#:#bYoff#',
+        'noise-map:#palette#:#noiseX#:#noiseY#:#noiseAlpha#',
     ],
     # pixel sort parameters
     'pixel-sort-angle': [str(x) for x in range(0, 360)],
@@ -53,5 +54,9 @@ rules = {
     'gYoff': [str(x) for x in range(-5,5)],
     'bXoff': [str(x) for x in range(-5,5)],
     'bYoff': [str(x) for x in range(-5,5)],
+    # noisemap parameters
+    'noiseX': [str(x) for x in np.arange(0.001, 0.25, 0.001)],
+    'noiseY': [str(x) for x in np.arange(0.001, 0.25, 0.001)],
+    'noiseAlpha': [str(x) for x in np.arange(0.0, 1.0, 0.01)],
 }
 grammar = tracery.Grammar(rules)
