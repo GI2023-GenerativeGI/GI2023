@@ -21,6 +21,9 @@ rules = {
         'circle-packing:#palette#:#circle-packing-limit#',
         'rgb-shift:#alphaR#:#alphaG#:#alphaB#:#rXoff#:#rYoff#:#gXoff#:#gYoff#:#bXoff#:#bYoff#',
         'noise-map:#palette#:#noiseX#:#noiseY#:#noiseAlpha#',
+        'oil-painting-filter:#oil-dynratio#',
+        'watercolor-filter:#wc-sigma_s#:#wc-sigma_r#',
+        'pencil-filter:#p-sigma_s#:#p-sigma_r#:#p-shade_factor#:#p-isbw#',
     ],
     # pixel sort parameters
     'pixel-sort-angle': [str(x) for x in range(0, 360)],
@@ -58,5 +61,13 @@ rules = {
     'noiseX': [str(x) for x in np.arange(0.001, 0.25, 0.001)],
     'noiseY': [str(x) for x in np.arange(0.001, 0.25, 0.001)],
     'noiseAlpha': [str(x) for x in np.arange(0.0, 1.0, 0.01)],
+    # opencv filter parameters
+    'oil-dynratio': [str(x) for x in range(1,64)],
+    'wc-sigma_s': [str(x) for x in range(1,20)],#200)],
+    'wc-sigma_r': [str(x) for x in np.arange(0.0, 0.5, 0.01)],
+    'p-sigma_s': [str(x) for x in range(1,2020)],#0)],
+    'p-sigma_r': [str(x) for x in np.arange(0.0, 0.5, 0.01)],
+    'p-shade_factor': [str(x) for x in np.arange(0.0, 0.05, 0.001)],
+    'p-isbw': ['on', 'off'],
 }
 grammar = tracery.Grammar(rules)

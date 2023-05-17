@@ -6,6 +6,9 @@ import random
 import math
 import numpy as np
 from settings import *
+import scipy.spatial
+import cv2
+from sklearn.cluster import KMeans
 
 
 ### Utility functions
@@ -752,3 +755,83 @@ def noiseMap(image, palette, noiseX, noiseY, alpha):
 
             temp_image.putpixel((x, y), ImageColor.getrgb(col))
     return Image.blend(image, temp_image, alpha)
+
+### OpenCV effects c/o https://towardsdatascience.com/painting-and-sketching-with-opencv-in-python-4293026d78b
+
+# OpenCV oil painting effect
+# Note: this is removing and re-adding the alpha channel as passing in an RGBA image seems to break the oilPainting function.
+def openCV_oilpainting(image, dynRatio):
+    img = np.array(image.convert('RGB'))
+    res = cv2.xphoto.oilPainting(img, dynRatio, 1)
+    return Image.fromarray(res).convert('RGBA')
+
+# OpenCV watercolor effect
+# sigma_s controls the size of the neighborhood. Range 1 - 200
+# sigma_r controls the how dissimilar colors within the neighborhood will be averaged. A larger sigma_r results in large regions of constant color. Range 0 - 1
+def openCV_watercolor(image, sigma_s, sigma_r):
+    img = np.array(image.convert('RGB'))
+    res = cv2.stylization(img, sigma_s=sigma_s, sigma_r=sigma_r)
+    return Image.fromarray(res).convert('RGBA')
+
+# OpenCV pencil sketch
+# sigma_s and sigma_r are the same as in stylization.
+# shade_factor is a simple scaling of the output image intensity. The higher the value, the brighter is the result. Range 0 - 0.1
+def openCV_pencilSketch(image, sigma_s, sigma_r, shade_factor, is_bw):
+    img = np.array(image.convert('RGB'))
+    dst_gray, dst_color = cv2.pencilSketch(img, sigma_s=sigma_s, sigma_r=sigma_r, shade_factor=shade_factor) 
+    if is_bw == 'on':
+        return Image.fromarray(dst_gray).convert('RGBA')
+    else:
+        return Image.fromarray(dst_color).convert('RGBA')
+
+# OpenCV stipple effect
+"""
+def compute_color_probabilities(pixels, palette):
+    distances = scipy.spatial.distance.cdist(pixels, palette)
+    maxima = np.amax(distances, axis=1)
+    distances = maxima[:, None] - distances
+    summ = np.sum(distances, 1)
+    distances /= summ[:, None]
+    return distances
+
+def get_color_from_prob(probabilities, palette):
+    probs = np.argsort(probabilities)
+    i = probs[-1]
+    return palette[i]
+def randomized_grid(h, w, scale):
+    assert (scale > 0)
+    r = scale//2
+    grid = []
+    for i in range(0, h, scale):
+        for j in range(0, w, scale):
+            y = random.randint(-r, r) + i
+            x = random.randint(-r, r) + j
+    grid.append((y % h, x % w))
+    random.shuffle(grid)
+    return grid
+def get_color_palette(img, n=8):#20):
+    clt = KMeans(n_clusters=n)
+    clt.fit(img.reshape(-1, 4))
+    return clt.cluster_centers_
+def complement(colors):
+    return 255 - colors
+def create_pointillism_art(image):
+    # img = cv2.imread(image_path)
+    img = np.array(image)
+    radius_width = int(math.ceil(max(img.shape) / 1000))
+    palette = get_color_palette(img)
+    complements = complement(palette)
+    palette = np.vstack((palette, complements))
+    canvas = img.copy()
+    grid = randomized_grid(img.shape[0], img.shape[1], scale=3)
+    
+    pixel_colors = np.array([img[x[0], x[1]] for x in grid])
+    
+    color_probabilities = compute_color_probabilities(pixel_colors, palette)
+
+    for i, (y, x) in enumerate(grid):
+            color = get_color_from_prob(color_probabilities[i], palette)
+            cv2.ellipse(canvas, (x, y), (radius_width, radius_width), 0, 0, 360, color, -1, cv2.LINE_AA)
+
+    return Image.fromarray(img)
+"""
