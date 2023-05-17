@@ -238,4 +238,10 @@ if __name__ == "__main__":
 
     WolframCA(image, random.choice(palettes))
     image = noiseMap(image, random.choice(palettes), random.uniform(0.01, 0.2), random.uniform(0.01, 0.2), random.uniform(0.2,1.0))
-    image.save("temp.rgb.png")
+
+    # image = openCV_oilpainting(image, random.randint(1,64))
+    # image.save("temp.oil.png")
+    # image = openCV_watercolor(image, random.randint(1,200), random.random())
+    # image.save("temp.wc.png")
+    image = openCV_pencilSketch(image, random.randint(1,200), random.random(), 0.05, False)#random.choice([True,False]))
+    image.save("temp.pc.png")
