@@ -90,7 +90,7 @@ Dithers an image using either 'simple' PIL dithering (i.e., grayscale only) or v
 #### Grammar Specification
 
 * `'dither:#ditherType#'
-  * `'ditherType': ['grayscale', 'halftone', 'dither', 'primaryColors', 'simpleDither']`
+* `'ditherType': ['grayscale', 'halftone', 'dither', 'primaryColors', 'simpleDither']`
 
 ### Drunkard's Walk
 
@@ -117,8 +117,8 @@ First implementation of a particle-based flow field.
 #### Grammar Specification
 
 * `'flow-field:#flow-field-type#:#flow-field-zoom#'`
-  * `'flow-field-type': ['edgy', 'curves']`
-  * `'flow-field-zoom': [str(x) for x in np.arange(0.001, 0.5, 0.001)]`
+* `'flow-field-type': ['edgy', 'curves']`
+* `'flow-field-zoom': [str(x) for x in np.arange(0.001, 0.5, 0.001)]`
 
 ### Flow Field v2
 
@@ -136,9 +136,9 @@ Second implementation of the flow field algorithm
 #### Grammar Specification
 
 * `'flow-field-2:#palette#:#flow-field-2-type#:#flow-field-2-noisescale#:#flow-field-2-resolution#'`
-  * `'flow-field-2-type': ['edgy','curvy']`
-  * `'flow-field-2-noisescale': [str(x) for x in range(200, 600)]`
-  * `'flow-field-2-resolution': [str(x) for x in range(2, 5)]`
+* `'flow-field-2-type': ['edgy','curvy']`
+* `'flow-field-2-noisescale': [str(x) for x in range(200, 600)]`
+* `'flow-field-2-resolution': [str(x) for x in range(2, 5)]`
 
 ### Pixel Sort
 
@@ -166,13 +166,13 @@ Pixel sorting algorithm c/o https://github.com/satyarth/pixelsort.
 
 * `'pixel-sort:#pixel-sort-angle#:#pixel-sort-interval#:#pixel-sort-sorting#:#pixel-sort-randomness#:#pixel-sort-charlength#:#pixel-sort-lowerthreshold#:#pixel-sort-upperthreshold#',`
 
-  * `'pixel-sort-angle': [str(x) for x in range(0, 360)],`
-  * `'pixel-sort-interval': ['random', 'edges', 'threshold', 'waves', 'none'],`
-  * `'pixel-sort-sorting': ['lightness', 'hue', 'saturation', 'intensity', 'minimum'],`
-  * `'pixel-sort-randomness': [str(x) for x in np.arange(0.0, 1.0, 0.05)],`
-  * `'pixel-sort-charlength': [str(x) for x in range(1, 30)],`
-  * `'pixel-sort-lowerthreshold': [str(x) for x in np.arange(0.0, 0.25, 0.01)],`
-  * `'pixel-sort-upperthreshold': [str(x) for x in np.arange(0.0, 1.0, 0.01)],`
+* `'pixel-sort-angle': [str(x) for x in range(0, 360)],`
+* `'pixel-sort-interval': ['random', 'edges', 'threshold', 'waves', 'none'],`
+* `'pixel-sort-sorting': ['lightness', 'hue', 'saturation', 'intensity', 'minimum'],`
+* `'pixel-sort-randomness': [str(x) for x in np.arange(0.0, 1.0, 0.05)],`
+* `'pixel-sort-charlength': [str(x) for x in range(1, 30)],`
+* `'pixel-sort-lowerthreshold': [str(x) for x in np.arange(0.0, 0.25, 0.01)],`
+* `'pixel-sort-upperthreshold': [str(x) for x in np.arange(0.0, 1.0, 0.01)],`
 
 ### Stipple
 
@@ -184,6 +184,7 @@ Executes a cellular automata algorithm, where the input cell rules are currently
 
 #### Grammar Specification
 
+<<<<<<< HEAD
 * `'wolfram-ca:#palette#'`
 
 ### RGB Shift
@@ -213,3 +214,6 @@ Overlays a noise map (based on Simplex noise) onto the existing canvas.
     *  `'noiseX': [str(x) for x in np.arange(0.001, 0.25)],`
     *  `'noiseY': [str(x) for x in np.arange(0.001, 0.25)],`
     *  `'noiseAlpha': [str(x) for x in np.arange(0.0, 1.0)],`
+=======
+* 'wolfram-ca:#palette#'
+>>>>>>> parent of 9469e4e... Update README.md
