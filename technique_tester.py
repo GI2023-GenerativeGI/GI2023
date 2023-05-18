@@ -236,12 +236,33 @@ def convert_primary(image):
 if __name__ == "__main__":
     image = Image.new("RGBA", DIM, background)
 
-    WolframCA(image, random.choice(palettes))
-    image = noiseMap(image, random.choice(palettes), random.uniform(0.01, 0.2), random.uniform(0.01, 0.2), random.uniform(0.2,1.0))
+    # drunkardsWalk(image)
+    WolframCA(image)
+    image.save("dithering.orig.png")
 
-    # image = openCV_oilpainting(image, random.randint(1,64))
-    # image.save("temp.oil.png")
-    # image = openCV_watercolor(image, random.randint(1,200), random.random())
-    # image.save("temp.wc.png")
-    image = openCV_pencilSketch(image, random.randint(1,200), random.random(), 0.05, False)#random.choice([True,False]))
-    image.save("temp.pc.png")
+    new = convert_grayscale(image)
+    new.save("dithering.grayscale.png")
+
+    new = convert_halftoning(image)
+    new.save("dithering.halftone.png")
+
+    new = convert_dithering(image)
+    new.save("dithering.dithering.png")
+
+    new = convert_primary(image)
+    new.save("dithering.primary.png")
+
+    #image.save("drunk.png")
+
+    #WolframCA(image)
+    #image.save("wolfram.png")
+
+    #stippledBG(image, "red", DIM)
+    #image.save("temp.png")
+    #image = simpleDither(image)
+    #image.save("temp.dither.png")
+    
+    #flowField2(image, random.choice(palettes), 'curvy', random.randrange(200, 600), random.randrange(2, 5))
+    #image.save("ff.png")
+    circlePacking(image, random.choice(palettes), random.randrange(10, 30))
+    image.save("circles.png")
