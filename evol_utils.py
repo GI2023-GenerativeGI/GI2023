@@ -185,6 +185,22 @@ def evaluate_individual(g):
                        _technique[4])
         elif _technique[0] == 'circle-packing':
             circlePacking(g.image, _technique[1], _technique[2])
+        elif _technique[0] == 'rgb-shift':
+            g.image = RGBShift(g.image, float(_technique[1]), float(_technique[2]), float(_technique[3]), float(_technique[4]), float(_technique[5]), float(_technique[6]), float(_technique[7]), float(_technique[8]), float(_technique[9]))
+        elif _technique[0] == 'noise-map':
+            g.image = noiseMap(g.image, _technique[1], float(_technique[2]), float(_technique[3]), float(_technique[4]))
+        elif _technique[0] == 'oil-painting-filter':
+            g.image = openCV_oilpainting(g.image, int(_technique[1]))
+        elif _technique[0] == 'watercolor-filter':
+            g.image = openCV_watercolor(g.image, int(_technique[1]), float(_technique[2]))
+        elif _technique[0] == 'pencil-filter':
+            g.image = openCV_pencilSketch(g.image, int(_technique[1]), float(_technique[2]), float(_technique[3]), _technique[4])
+        elif _technique[0] == 'walkers':
+            walkers(g.image, palette=_technique[1], num_walkers=int(_technique[2]), walk_type=_technique[3])
+        elif _technique[0] == 'basic_trig':
+            basic_trig(g.image, palette=_technique[1], num_to_draw=int(_technique[2]), drawtype=_technique[3])
+        
+            # crud we need to update the mutation as well...
 
     return g
 
@@ -421,6 +437,39 @@ def singlePointMutation(ind):
         elif technique == "circle-packing":
             gene[1] = random.choice(palettes)
             gene[2] = str(random.randint(10, 30))
+        elif technique == "rgb-shift":
+            gene[1] = str(round(random.uniform(0.0, 1.0), 2))
+            gene[2] = str(round(random.uniform(0.0, 1.0), 2))
+            gene[3] = str(round(random.uniform(0.0, 1.0), 2))
+            gene[4] = str(random.randint(-5,5))
+            gene[5] = str(random.randint(-5,5))
+            gene[6] = str(random.randint(-5,5))
+            gene[7] = str(random.randint(-5,5))
+            gene[8] = str(random.randint(-5,5))
+            gene[9] = str(random.randint(-5,5))
+        elif technique == "noise-map":
+            gene[1] = random.choice(palettes)
+            gene[2] = str(round(random.uniform(0.001, 0.25), 3))
+            gene[3] = str(round(random.uniform(0.001, 0.25), 3))
+            gene[4] = str(round(random.uniform(0.0, 1.0), 2))
+        elif technique == "oil-painting":
+            gene[1] = str(random.randint(1,64))
+        elif technique == "watercolor-filter":
+            gene[1] = str(random.randint(1, 20))
+            gene[2] = str(round(random.uniform(0.0, 0.5), 2))
+        elif technique == "pencil-filter":
+            gene[1] = str(random.randint(1, 20))
+            gene[2] = str(round(random.uniform(0.0, 0.5), 2))
+            gene[3] = str(round(random.uniform(0.0, 0.05), 3))
+            gene[4] = random.choice(["on", "off"])
+        elif technique == "walkers":
+            gene[1] = random.choice(palettes)
+            gene[2] = str(random.randint(10, 100))
+            gene[3] = random.choice(['ordered', 'random', 'rule'])
+        elif technique == "basic-trig":
+            gene[1] = random.choice(palettes)
+            gene[2] = str(random.randint(1, 100))
+            gene[3] = random.choice(['circle', 'rect'])
 
         # no params here - placeholders if we augment
         # elif technique == "stippled":

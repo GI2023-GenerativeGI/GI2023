@@ -236,33 +236,34 @@ def convert_primary(image):
 if __name__ == "__main__":
     image = Image.new("RGBA", DIM, background)
 
-    # drunkardsWalk(image)
-    WolframCA(image)
-    image.save("dithering.orig.png")
+    # WolframCA(image, random.choice(palettes))
+    # image = noiseMap(image, random.choice(palettes), random.uniform(0.01, 0.2), random.uniform(0.01, 0.2), random.uniform(0.2,1.0))
 
-    new = convert_grayscale(image)
-    new.save("dithering.grayscale.png")
+    # image = openCV_oilpainting(image, random.randint(1,64))
+    # image.save("temp.oil.png")
+    # image = openCV_watercolor(image, random.randint(1,200), random.random())
+    # image.save("temp.wc.png")
+    # image = openCV_pencilSketch(image, random.randint(1,200), random.random(), 0.05, False)#random.choice([True,False]))
 
-    new = convert_halftoning(image)
-    new.save("dithering.halftone.png")
 
-    new = convert_dithering(image)
-    new.save("dithering.dithering.png")
-
-    new = convert_primary(image)
-    new.save("dithering.primary.png")
-
-    #image.save("drunk.png")
-
-    #WolframCA(image)
-    #image.save("wolfram.png")
-
-    #stippledBG(image, "red", DIM)
-    #image.save("temp.png")
-    #image = simpleDither(image)
-    #image.save("temp.dither.png")
-    
-    #flowField2(image, random.choice(palettes), 'curvy', random.randrange(200, 600), random.randrange(2, 5))
-    #image.save("ff.png")
-    circlePacking(image, random.choice(palettes), random.randrange(10, 30))
-    image.save("circles.png")
+    for i in range(50):
+      image = Image.new("RGBA", DIM, background)
+      drawGradient(image, random.choice(palettes), random.randint(1,DIM[1]//8))
+      # walkers(image, random.choice(palettes), random.randint(10,100), random.choice(['ordered', 'random', 'rule']))
+    #   basic_trig(image, random.choice(palettes), random.randrange(1,100), random.choice(['circle', 'rect']))
+    #   r = random.random()
+    #   if r < 0.25:
+    #     snd = random.randint(1,24)
+    #     image = openCV_oilpainting(image, snd)#random.randint(1,64))  ## DOES NOT SEEM TO ACT WELL ON EMPTY SPAC
+    #     print(i,0,snd)
+    #   elif r < 0.5:
+    #     image = openCV_watercolor(image, random.randint(1,200), random.random())
+    #     print(i,1)
+    #   elif r < 0.75:
+    #     image = openCV_pencilSketch(image, random.randint(1,200), random.random(), 0.05, False)#random.choice([True,False]))
+    #     print(i,2)
+    #   else:
+    #     print(i,3)
+    # #   image.save("sin2/temp.sin.{0}.png".format(i))
+    #   image.save("w/temp.walkers.{0}.png".format(i))
+      image.save('g/gradients.{0}.png'.format(i))
