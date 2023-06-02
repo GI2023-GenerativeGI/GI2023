@@ -6,6 +6,9 @@ from techniques import *
 from time import sleep
 from colour_palettes import palettes
 
+from evol_utils import evaluate_individual, initIndividual
+from generative_object import GenerativeObject
+
 DIM = (1000,1000)
 background = "black"
 
@@ -232,8 +235,16 @@ def convert_primary(image):
   # Return new image
   return new
 
+# Execute a flattened grammar string
+def runGrammar(_grammar, filename):
+    # g = initIndividual(GenerativeObject)
+    g = GenerativeObject(DIM, _grammar)
+    # g.grammar = _grammar
+    g = evaluate_individual(g)
+    g.image.save(filename)
 
 if __name__ == "__main__":
+    random.seed(0)
     image = Image.new("RGBA", DIM, background)
 
     # WolframCA(image, random.choice(palettes))
@@ -246,9 +257,9 @@ if __name__ == "__main__":
     # image = openCV_pencilSketch(image, random.randint(1,200), random.random(), 0.05, False)#random.choice([True,False]))
 
 
-    for i in range(50):
-      image = Image.new("RGBA", DIM, background)
-      drawGradient(image, random.choice(palettes), random.randint(1,DIM[1]//8))
+    # for i in range(50):
+    #   image = Image.new("RGBA", DIM, background)
+    #   drawGradient(image, random.choice(palettes), random.randint(1,DIM[1]//8))
       # walkers(image, random.choice(palettes), random.randint(10,100), random.choice(['ordered', 'random', 'rule']))
     #   basic_trig(image, random.choice(palettes), random.randrange(1,100), random.choice(['circle', 'rect']))
     #   r = random.random()
@@ -266,4 +277,11 @@ if __name__ == "__main__":
     #     print(i,3)
     # #   image.save("sin2/temp.sin.{0}.png".format(i))
     #   image.save("w/temp.walkers.{0}.png".format(i))
-      image.save('g/gradients.{0}.png'.format(i))
+      # image.save('g/gradients.{0}.png'.format(i))
+
+    # testing a string-based evaluation
+    # _grammar = "dither:simpleDither,flow-field-2:FF4365 00A6A6 EFCA08 F49F0A F08700:edgy:274:4"
+    # _grammar = "noise-map:0A2463 3E92CC FFFAFF D8315B 912F40:0.027000000000000003:0.137:0.74,drunkardsWalk:75F4F4 90E0F3 B8B3E9 D999B9 D17B88,wolfram-ca:331E36 41337A 6EA4BF C2EFEB ECFEE8,rgb-shift:0.31:0.3:0.96:-3:-1:0:1:-5:-3,flow-field-2:00B9AE 037171 03312E 02C3BD 009F93:curvy:579:2"
+    _grammar =  "walkers:FB8B24 D90368 820263 14342B 04A777:27:rule,rgb-shift:0.8300000000000001:0.8200000000000001:0.44:-4:-3:-1:-5:-5:-5"
+    runGrammar(_grammar, "TEST.4.png")
+

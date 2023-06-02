@@ -2,7 +2,7 @@ from PIL import Image, ImageDraw, ImageChops, ImageColor
 import opensimplex
 from perlin_noise import PerlinNoise
 from pixelsort import pixelsort
-import random
+# import random
 import math
 import numpy as np
 from settings import *
@@ -45,7 +45,7 @@ def count_nonblack_pil(img):
 ###
 
 
-def pixelSort(img, params):
+def pixelSort(img, rng, params):
     return pixelsort(
         img,
         angle=int(params[0]),
@@ -72,7 +72,7 @@ def pixelSort(img, params):
 
 
 # "simple" PIL dithering
-def simpleDither(img):
+def simpleDither(img, rng):
     dithered = img.convert(mode="1")
     dithered = dithered.convert("RGBA")
     return dithered
@@ -81,6 +81,7 @@ def simpleDither(img):
 # "Simple" Drunkards walk
 def drunkardsWalk(
         img,
+        rng,
         palette=None,
         pointSize=1,
         life=None,
@@ -90,27 +91,28 @@ def drunkardsWalk(
         numSteps=None):
     # randomly set parameters if not specified
     if startX == None:
-        startX = random.randint(0, DIM[0] - 1)
+        startX = rng.randint(0, img.width - 1)
+        startX = rng.randint(0, img.width - 1)
 
     if startY == None:
-        startY = random.randint(0, DIM[1] - 1)
+        startY = rng.randint(0, img.height - 1)
 
     if life == None:
-        life = random.randint(int(DIM[0] * 0.5), int(5 * DIM[0]))
+        life = rng.randint(int(img.width * 0.5), int(5 * img.width))
 
     if palette == None:
-        r = random.randint(0, 255)
-        g = random.randint(0, 255)
-        b = random.randint(0, 255)
-        a = random.randint(20, 255)
+        r = rng.randint(0, 255)
+        g = rng.randint(0, 255)
+        b = rng.randint(0, 255)
+        a = rng.randint(20, 255)
         col = (r, g, b, a)
     else:
         palette = getPaletteValues(palette)
-        random.shuffle(palette)
+        rng.shuffle(palette)
         col = palette[0]
 
     if numSteps == None:
-        numSteps = random.randint(5, 200)
+        numSteps = rng.randint(5, 200)
 
     draw = ImageDraw.Draw(img)
 
@@ -131,29 +133,29 @@ def drunkardsWalk(
     x = startX
     y = startY
     while numSteps > 0:
-        d = random.choice(dirs)
+        d = rng.choice(dirs)
         while l < life:
             draw.rectangle([x, y, x + pointSize, y + pointSize], fill=col)
 
             # allow the drunkard to keep walking to 'branch' out a bit
-            if (random.random() > 0.75):
-                d = random.choice(dirs)
+            if (rng.random() > 0.75):
+                d = rng.choice(dirs)
             x += d[0]
             y += d[1]
 
-            x = constrain(x, 0, DIM[0])
-            y = constrain(y, 0, DIM[1])
+            x = constrain(x, 0, img.width)
+            y = constrain(y, 0, img.height)
             l += 1
 
         numSteps -= 1
         l = 0
 
-        if (random.random() > 0.85):
-            startX = random.randint(0, DIM[0] - 1)
-            startY = random.randint(0, DIM[1] - 1)
+        if (rng.random() > 0.85):
+            startX = rng.randint(0, img.width - 1)
+            startY = rng.randint(0, img.height - 1)
 
             # new color!
-            random.shuffle(palette)
+            rng.shuffle(palette)
             col = palette[0]
 
         x = startX
@@ -162,17 +164,18 @@ def drunkardsWalk(
     return
 
 
-def stippledBG(img, fill, DIM):
+def stippledBG(img, rng, fill, DIM):
     draw = ImageDraw.Draw(img)
-    for y in range(DIM[1]):
-        num = int(DIM[0] * p5map(y, 0, DIM[1], 0.01, 0.2))
+    for y in range(img.height):
+        num = int(img.width * p5map(y, 0, img.height, 0.01, 0.2))
         for _ in range(num):
-            x = random.randint(0, DIM[0] - 1)
+            x = rng.randint(0, img.width - 1)
             draw.point((x, y), fill)
 
 
 # Noise from opensimplex.noise returns [-1,1]
 def flowField(img,
+              rng,
               cellsize,
               numrows,
               numcols,
@@ -201,9 +204,9 @@ def flowField(img,
     particles = []
     for _ in range(1000):
         p = {
-            'x': random.randint(0, numcols - 1),
-            'y': random.randint(0, numrows - 1),
-            'life': random.randint(numcols / 2, numcols)
+            'x': rng.randint(0, numcols - 1),
+            'y': rng.randint(0, numrows - 1),
+            'life': rng.randint(numcols / 2, numcols)
         }
         particles.append(p)
 
@@ -259,12 +262,12 @@ def getPaletteValues(p):
     return palette
 
 
-def WolframCA(img, palette):
+def WolframCA(img, rng, palette):
     # setup
     draw = ImageDraw.Draw(img)
 
     palette = getPaletteValues(palette)
-    random.shuffle(palette)
+    rng.shuffle(palette)
     main_col = palette[0]
 
     width, height = img.size
@@ -278,20 +281,20 @@ def WolframCA(img, palette):
 
     # random starting point
     # TBD param
-    if random.random() > 0.5:
+    if rng.random() > 0.5:
         cells[len(cells) // 2] = 1
     else:
-        cells[random.randint(0, len(cells) - 1)] = 1
+        cells[rng.randint(0, len(cells) - 1)] = 1
 
     # standard wolfram rules
     # TBD param
-    if random.random() > 0.5:
+    if rng.random() > 0.5:
         ruleset = [0, 1, 0, 1, 1, 0, 1, 0]
     else:
-        # random rules
+        # rng rules
         ruleset = []
         for _ in range(8):
-            ruleset.append(random.choice([0, 1]))
+            ruleset.append(rng.choice([0, 1]))
 
     # draw and iterate
     col = (220, 220, 220)
@@ -309,7 +312,7 @@ def WolframCA(img, palette):
     return
 
 
-def flowField2(img, palette, flowtype, noisescale, resolution):
+def flowField2(img, rng, palette, flowtype, noisescale, resolution):
     draw = ImageDraw.Draw(img)
 
     # unpack strings
@@ -326,24 +329,24 @@ def flowField2(img, palette, flowtype, noisescale, resolution):
     noise = PerlinNoise()
 
     # add particles along top and bottom
-    for x in range(0, DIM[0], resolution):
-        r = random.random()
+    for x in range(0, img.width, resolution):
+        r = rng.random()
         if r < 0.5:
-            p = {'x': x, 'y': 0, 'colour': random.choice(palette)}
+            p = {'x': x, 'y': 0, 'colour': rng.choice(palette)}
             particles.append(p)
         else:
-            p = {'x': x, 'y': DIM[1], 'colour': random.choice(palette)}
+            p = {'x': x, 'y': img.height, 'colour': rng.choice(palette)}
             particles.append(p)
         x += resolution
 
     # add particles along left and right sides
-    for y in range(0, DIM[1], resolution):
-        r = random.random()
+    for y in range(0, img.height, resolution):
+        r = rng.random()
         if r < 0.5:
-            p = {'x': 0, 'y': y, 'colour': random.choice(palette)}
+            p = {'x': 0, 'y': y, 'colour': rng.choice(palette)}
             particles.append(p)
         else:
-            p = {'x': DIM[0], 'y': y, 'colour': random.choice(palette)}
+            p = {'x': img.width, 'y': y, 'colour': rng.choice(palette)}
             particles.append(p)
         y += resolution
 
@@ -365,13 +368,13 @@ def flowField2(img, palette, flowtype, noisescale, resolution):
             p['y'] += math.sin(angle)
 
             # check edge
-            if (p['x'] < 0 or p['x'] > DIM[0] or p['y'] < 0
-                    or p['y'] > DIM[1]):
+            if (p['x'] < 0 or p['x'] > img.width or p['y'] < 0
+                    or p['y'] > img.height):
                 particles.pop(i)
     return
 
 
-def circlePacking(img, palette, limit):
+def circlePacking(img, rng, palette, limit):
     draw = ImageDraw.Draw(img)
 
     # unpack strings
@@ -388,9 +391,9 @@ def circlePacking(img, palette, limit):
         finished = False
 
         while count < total:
-            # random centerpoint
-            x = random.randrange(DIM[0])
-            y = random.randrange(DIM[1])
+            # rng centerpoint
+            x = rng.randrange(img.width)
+            y = rng.randrange(img.height)
             valid = True
 
             for c in circles:
@@ -406,7 +409,7 @@ def circlePacking(img, palette, limit):
                     'x': x,
                     'y': y,
                     'radius': 1,
-                    'colour': random.choice(palette),
+                    'colour': rng.choice(palette),
                     'growing': True
                 }
                 circles.append(newC)
@@ -430,8 +433,7 @@ def circlePacking(img, palette, limit):
 
             if growing:
                 # check if circle hit canvas edge
-                if x + radius >= DIM[0] or x - radius <= 0 or y + radius >= DIM[
-                        1] or y - radius <= 0:
+                if x + radius >= img.width or x - radius <= 0 or y + radius >= img.height or y - radius <= 0:
                     c['growing'] = False
                 else:
                     # check if circle hit other circle
@@ -487,7 +489,7 @@ def get_pixel(image, i, j):
 
 
 # Create a Grayscale version of the image
-def convert_grayscale(image):
+def convert_grayscale(image, rng):
     # Get size
     width, height = image.size
 
@@ -517,7 +519,7 @@ def convert_grayscale(image):
 
 
 # Create a Half-tone version of the image
-def convert_halftoning(image):
+def convert_halftoning(image, rng):
     # Get size
     width, height = image.size
 
@@ -598,7 +600,7 @@ def get_saturation(value, quadrant):
 
 
 # Create a dithered version of the image
-def convert_dithering(image):
+def convert_dithering(image, rng):
     # Get size
     width, height = image.size
 
@@ -642,7 +644,7 @@ def convert_dithering(image):
 
 
 # Create a Primary Colors version of the image
-def convert_primary(image):
+def convert_primary(image, rng):
     # Get size
     width, height = image.size
 
@@ -685,7 +687,7 @@ def convert_primary(image):
 # Separates image into 3 different layers, shifts each by a 
 # parameterized amount, and stitches back together
 # based on: https://stackoverflow.com/questions/51325224/python-pil-image-split-to-rgb
-def RGBShift(image, alphaR=0.5, alphaG=0.5, alphaB=0.5, 
+def RGBShift(image, rng, alphaR=0.5, alphaG=0.5, alphaB=0.5, 
              rXoff=-5, rYoff=-5,
              gXoff=0, gYoff=-5,
              bXoff=5, bYoff=5):
@@ -706,7 +708,7 @@ def RGBShift(image, alphaR=0.5, alphaG=0.5, alphaB=0.5,
         if d == (0, 0, 0, 255):
             d = (0, 0, 0, 0)
 
-    temp_image = Image.new("RGBA", DIM, BACKGROUND)
+    temp_image = Image.new("RGBA", (image.width, image.height), BACKGROUND)
 
     # https://stackoverflow.com/questions/37584977/translate-image-using-pil
     # [2] - left/right
@@ -730,10 +732,10 @@ def RGBShift(image, alphaR=0.5, alphaG=0.5, alphaB=0.5,
     return image
 
 # Overlay a noise map to the existing canvas
-def noiseMap(image, palette, noiseX, noiseY, alpha):
-    temp_image = Image.new("RGBA", DIM, BACKGROUND)
+def noiseMap(image, rng, palette, noiseX, noiseY, alpha):
+    temp_image = Image.new("RGBA", (image.width, image.height), BACKGROUND)
     palette = getPaletteValues(palette)
-    random.shuffle(palette)
+    rng.shuffle(palette)
 
     bands = []
     for i in range(len(palette)):
@@ -760,7 +762,7 @@ def noiseMap(image, palette, noiseX, noiseY, alpha):
 
 # OpenCV oil painting effect
 # Note: this is removing and re-adding the alpha channel as passing in an RGBA image seems to break the oilPainting function.
-def openCV_oilpainting(image, dynRatio):
+def openCV_oilpainting(image, rng, dynRatio):
     img = np.array(image.convert('RGB'))
     res = cv2.xphoto.oilPainting(img, dynRatio, 1)
     return Image.fromarray(res).convert('RGBA')
@@ -768,7 +770,7 @@ def openCV_oilpainting(image, dynRatio):
 # OpenCV watercolor effect
 # sigma_s controls the size of the neighborhood. Range 1 - 200
 # sigma_r controls the how dissimilar colors within the neighborhood will be averaged. A larger sigma_r results in large regions of constant color. Range 0 - 1
-def openCV_watercolor(image, sigma_s, sigma_r):
+def openCV_watercolor(image, rng, sigma_s, sigma_r):
     img = np.array(image.convert('RGB'))
     res = cv2.stylization(img, sigma_s=sigma_s, sigma_r=sigma_r)
     return Image.fromarray(res).convert('RGBA')
@@ -776,7 +778,7 @@ def openCV_watercolor(image, sigma_s, sigma_r):
 # OpenCV pencil sketch
 # sigma_s and sigma_r are the same as in stylization.
 # shade_factor is a simple scaling of the output image intensity. The higher the value, the brighter is the result. Range 0 - 0.1
-def openCV_pencilSketch(image, sigma_s, sigma_r, shade_factor, is_bw):
+def openCV_pencilSketch(image, rng, sigma_s, sigma_r, shade_factor, is_bw):
     img = np.array(image.convert('RGB'))
     dst_gray, dst_color = cv2.pencilSketch(img, sigma_s=sigma_s, sigma_r=sigma_r, shade_factor=shade_factor) 
     if is_bw == 'on':
@@ -838,27 +840,27 @@ def create_pointillism_art(image):
 
 ### TO ADD
 
-def basic_trig(image, palette, num_to_draw, drawtype):
+def basic_trig(image, rng, palette, num_to_draw, drawtype):
     # amplitude, frequency, offset, pointSize):
-    half_height = DIM[1] // 2
+    half_height = image.height // 2
 
     draw = ImageDraw.Draw(image)
     palette = getPaletteValues(palette)
     for _ in range(num_to_draw):
-        random.shuffle(palette)
+        rng.shuffle(palette)
         col = ImageColor.getrgb(palette[0])
-        alpha = random.randint(20,220)
+        alpha = rng.randint(20,220)
         col_with_alpha = (col[0], col[1], col[2], alpha)
 
-        amplitude = random.uniform(1.0, half_height)
-        frequency = random.uniform(-100, 100)
+        amplitude = rng.uniform(1.0, half_height)
+        frequency = rng.uniform(-100, 100)
         offset  = half_height
-        pointSize = random.randint(1, 5)
+        pointSize = rng.randint(1, 5)
         radius = pointSize // 2
-        math_fxn = random.choice([math.sin, math.cos, math.tan])
-        for x in range(0, DIM[0]-1):
+        math_fxn = rng.choice([math.sin, math.cos, math.tan])
+        for x in range(0, image.width-1):
             y = amplitude * math_fxn(x * frequency) + offset
-            y = constrain(y, 0, DIM[1]-1)
+            y = constrain(y, 0, image.height-1)
             if drawtype == "rect":
                 draw.rectangle([x, y, x + pointSize, y + pointSize], fill=col) # works better with other techniques
             elif drawtype == "circle":
@@ -869,7 +871,7 @@ def basic_trig(image, palette, num_to_draw, drawtype):
 
             # image.putpixel((int(x), int(y)), col_with_alpha)
 
-def walkers(image, palette, num_walkers, walk_type):
+def walkers(image, rng, palette, num_walkers, walk_type):
     draw = ImageDraw.Draw(image)
     palette = getPaletteValues(palette)
     TIMEOUT = 1000
@@ -877,29 +879,29 @@ def walkers(image, palette, num_walkers, walk_type):
 
     particles = []
     # ordered
-    vel = [random.choice([-1,0,1]), random.choice([-1,0,1])]
+    vel = [rng.choice([-1,0,1]), rng.choice([-1,0,1])]
     while vel[0] == 0 and vel[1] == 0:
-        vel = [random.choice([-1,0,1]), random.choice([-1,0,1])]
+        vel = [rng.choice([-1,0,1]), rng.choice([-1,0,1])]
 
     # rule based
-    vel2 = [random.choice([-1,0,1]), random.choice([-1,0,1])]
+    vel2 = [rng.choice([-1,0,1]), rng.choice([-1,0,1])]
     while vel2[0] == 0 and vel2[1] == 0:
-        vel2 = [random.choice([-1,0,1]), random.choice([-1,0,1])]
+        vel2 = [rng.choice([-1,0,1]), rng.choice([-1,0,1])]
 
     for _ in range(num_walkers):
-        # random
-        if walk_type == 'random':
-            vel = [random.choice([-1,0,1]), random.choice([-1,0,1])]
+        # rng
+        if walk_type == 'rng':
+            vel = [rng.choice([-1,0,1]), rng.choice([-1,0,1])]
             while vel[0] == 0 and vel[1] == 0:
-                vel = [random.choice([-1,0,1]), random.choice([-1,0,1])]
+                vel = [rng.choice([-1,0,1]), rng.choice([-1,0,1])]
         p = {
-            'x': random.randint(0,DIM[0]-1),
-            'y': random.randint(0,DIM[1]-1),
+            'x': rng.randint(0,image.width-1),
+            'y': rng.randint(0,image.height-1),
             'vel': vel,
             'next_vel': vel2,
-            'life': random.randint(DIM[0]//2, DIM[0]*2),
-            'update': random.randint(DIM[0]//8, DIM[0]//2),
-            'col': random.choice(palette)
+            'life': rng.randint(image.width//2, image.width*2),
+            'update': rng.randint(image.width//8, image.width//2),
+            'col': rng.choice(palette)
         }
         particles.append(p)
 
@@ -913,11 +915,11 @@ def walkers(image, palette, num_walkers, walk_type):
                 p['life'] -= 1
 
                 if i > 0:
-                    # update if randomly walking and it is time or we're out of bounds
-                    if (p['update'] % i == 0 and walk_type == 'random') or p['x'] < 0 or p['x'] > DIM[0]-1 or p['y'] < 0 or p['y'] > DIM[1]-1:
-                        p['x'] = random.randint(0,DIM[0]-1)
-                        p['y'] = random.randint(0,DIM[1]-1)
-                        p['col'] = random.choice(palette)
+                    # update if rngly walking and it is time or we're out of bounds
+                    if (p['update'] % i == 0 and walk_type == 'rng') or p['x'] < 0 or p['x'] > image.width-1 or p['y'] < 0 or p['y'] > image.height-1:
+                        p['x'] = rng.randint(0,image.width-1)
+                        p['y'] = rng.randint(0,image.height-1)
+                        p['col'] = rng.choice(palette)
                     elif p['update'] % i == 0 and walk_type == 'rule': # flip velocity
                         temp = p['vel']
                         p['vel'] = p['next_vel']
@@ -925,14 +927,11 @@ def walkers(image, palette, num_walkers, walk_type):
 
 
 
-def drawGradient(image, palette, thickness):
+def drawGradient(image, rng, palette, thickness):
     draw = ImageDraw.Draw(image)
     palette = getPaletteValues(palette)
 
-    col1 = random.choice(palette)
-    col2 = random.choice(palette)
+    col1 = rng.choice(palette)
+    col2 = rng.choice(palette)
 
     # lerpcolor?
-
-
-

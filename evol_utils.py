@@ -8,10 +8,8 @@ import random
 
 import os
 
-from PIL import Image, ImageDraw, ImageChops
-import opensimplex
+from PIL import Image
 import tracery
-from generative_object import GenerativeObject
 from techniques import *
 import cv2
 from scipy.spatial import distance as dist
@@ -19,6 +17,7 @@ from scipy.spatial import distance as dist
 from settings import *
 
 args = ""
+rng = None
 lexicase_ordering = []
 glob_fit_indicies = []
 
@@ -32,6 +31,7 @@ class ExperimentSettings(object):
     num_objectives = num_environments * 7  # 4 ways to measure fitness per environment.
 
     args = ""
+    rng = None
 
     treatments = [
         "baseline",  #0
@@ -133,6 +133,7 @@ def writeGeneration(filename, generation, individuals):
 # Non-class methods specific to the problem at hand.
 def initIndividual(ind_class):
     return ind_class(ExperimentSettings.DIM,
+                     ExperimentSettings.rng,
                      ExperimentSettings.grammar.flatten("#ordered_pattern#"))
 
 
@@ -147,14 +148,14 @@ def evaluate_individual(g):
     """
     for technique in g.grammar.split(','):
         _technique = technique.split(":")  # split off parameters
-        c = (random.randint(0,
-                            255), random.randint(0,
-                                                 255), random.randint(0, 255))
+        c = (g.rng.randint(0,
+                            255), g.rng.randint(0,
+                                                 255), g.rng.randint(0, 255))
         if _technique[0] == 'flow-field':
-            flowField(g.image, 1, g.dim[1], g.dim[0], c, _technique[1],
+            flowField(g.image, g.rng, 1, g.dim[1], g.dim[0], c, _technique[1],
                       _technique[2], _technique[2])
         elif _technique[0] == 'stippled':
-            stippledBG(g.image, c, g.dim)
+            stippledBG(g.image, g.rng, c, g.dim)
         elif _technique[0] == 'pixel-sort':
             # 1: angle
             # 2: interval
@@ -163,45 +164,43 @@ def evaluate_individual(g):
             # 5: character length
             # 6: lower threshold
             # 7: upper threshold
-            g.image = pixelSort(g.image, _technique[1:])
+            g.image = pixelSort(g.image, g.rng, _technique[1:])
 
         elif _technique[0] == 'dither':
             if _technique[1] == 'grayscale':
-                g.image = convert_grayscale(g.image)
+                g.image = convert_grayscale(g.image, rng)
             elif _technique[1] == 'halftone':
-                g.image = convert_halftoning(g.image)
+                g.image = convert_halftoning(g.image, rng)
             elif _technique[1] == 'dither':
-                g.image = convert_dithering(g.image)
+                g.image = convert_dithering(g.image, rng)
             elif _technique[1] == 'primaryColors':
-                g.image = convert_primary(g.image)
+                g.image = convert_primary(g.image, rng)
             else:
-                g.image = simpleDither(g.image)
+                g.image = simpleDither(g.image, rng)
         elif _technique[0] == 'wolfram-ca':
-            WolframCA(g.image, _technique[1])
+            WolframCA(g.image, rng, _technique[1])
         elif _technique[0] == 'drunkardsWalk':
-            drunkardsWalk(g.image, palette=_technique[1])
+            drunkardsWalk(g.image, rng, palette=_technique[1])
         elif _technique[0] == 'flow-field-2':
-            flowField2(g.image, _technique[1], _technique[2], _technique[3],
+            flowField2(g.image, rng, _technique[1], _technique[2], _technique[3],
                        _technique[4])
         elif _technique[0] == 'circle-packing':
-            circlePacking(g.image, _technique[1], _technique[2])
+            circlePacking(g.image, rng, _technique[1], _technique[2])
         elif _technique[0] == 'rgb-shift':
-            g.image = RGBShift(g.image, float(_technique[1]), float(_technique[2]), float(_technique[3]), float(_technique[4]), float(_technique[5]), float(_technique[6]), float(_technique[7]), float(_technique[8]), float(_technique[9]))
+            g.image = RGBShift(g.image, rng, float(_technique[1]), float(_technique[2]), float(_technique[3]), float(_technique[4]), float(_technique[5]), float(_technique[6]), float(_technique[7]), float(_technique[8]), float(_technique[9]))
         elif _technique[0] == 'noise-map':
-            g.image = noiseMap(g.image, _technique[1], float(_technique[2]), float(_technique[3]), float(_technique[4]))
+            g.image = noiseMap(g.image, rng, _technique[1], float(_technique[2]), float(_technique[3]), float(_technique[4]))
         elif _technique[0] == 'oil-painting-filter':
-            g.image = openCV_oilpainting(g.image, int(_technique[1]))
+            g.image = openCV_oilpainting(g.image, rng, int(_technique[1]))
         elif _technique[0] == 'watercolor-filter':
-            g.image = openCV_watercolor(g.image, int(_technique[1]), float(_technique[2]))
+            g.image = openCV_watercolor(g.image, rng, int(_technique[1]), float(_technique[2]))
         elif _technique[0] == 'pencil-filter':
-            g.image = openCV_pencilSketch(g.image, int(_technique[1]), float(_technique[2]), float(_technique[3]), _technique[4])
+            g.image = openCV_pencilSketch(g.image, rng, int(_technique[1]), float(_technique[2]), float(_technique[3]), _technique[4])
         elif _technique[0] == 'walkers':
-            walkers(g.image, palette=_technique[1], num_walkers=int(_technique[2]), walk_type=_technique[3])
+            walkers(g.image, rng, palette=_technique[1], num_walkers=int(_technique[2]), walk_type=_technique[3])
         elif _technique[0] == 'basic_trig':
-            basic_trig(g.image, palette=_technique[1], num_to_draw=int(_technique[2]), drawtype=_technique[3])
+            basic_trig(g.image, rng, palette=_technique[1], num_to_draw=int(_technique[2]), drawtype=_technique[3])
         
-            # crud we need to update the mutation as well...
-
     return g
 
 
@@ -344,14 +343,19 @@ def singlePointCrossover(ind1, ind2):
     # children
     c1 = copy.deepcopy(ind1)
 
+    # clear the canvas if the command line parameter is set
+    if args.clear_canvas:
+        c1.image = Image.new("RGBA", DIM, "black")
+        c1.isEvaluated = False
+
     split_grammar1 = ind1.grammar.split(",")
     split_grammar2 = ind1.grammar.split(",")
 
     if len(split_grammar1) > 1 and len(split_grammar2) > 1:
         # crossover for variable length
         # pick an index each and flop
-        xover_idx1 = random.randint(1, len(split_grammar1) - 1)
-        xover_idx2 = random.randint(1, len(split_grammar2) - 1)
+        xover_idx1 = ind1.rng.randint(1, len(split_grammar1) - 1)
+        xover_idx2 = ind1.rng.randint(1, len(split_grammar2) - 1)
 
         new_grammar1 = []
         # up to indices
@@ -367,11 +371,11 @@ def singlePointCrossover(ind1, ind2):
 
         if len(split_grammar1) == 1:
             new_grammar1 = copy.deepcopy(split_grammar2)
-            new_grammar1.insert(random.randint(0, len(split_grammar2)),
+            new_grammar1.insert(ind1.rng.randint(0, len(split_grammar2)),
                                 split_grammar1[0])
         else:
             new_grammar1 = copy.deepcopy(split_grammar1)
-            new_grammar1.insert(random.randint(0, len(split_grammar1)),
+            new_grammar1.insert(ind1.rng.randint(0, len(split_grammar1)),
                                 split_grammar2[0])
 
     c1.grammar = ",".join(new_grammar1)
@@ -381,28 +385,31 @@ def singlePointCrossover(ind1, ind2):
 # And single-point mutation
 def singlePointMutation(ind):
     mutator = copy.deepcopy(ind)
-    # leaving the 'old' image makes it look neater imo...
-    #mutator.image = Image.new("RGBA", DIM, "black")
-    # mutator.isEvaluated = False
+
+    # clear the canvas if the command line parameter is set
+    if args.clear_canvas:
+        mutator.image = Image.new("RGBA", DIM, "black")
+        mutator.isEvaluated = False
 
     # Change a technique.
-    if random.random() < 0.25:
+    # if random.random() < 0.25:
+    if ind.rng.random() < 0.25:
         split_grammar = mutator.grammar.split(",")
-        mut_idx = random.randint(0, len(split_grammar) - 1)
+        mut_idx = ind.rng.randint(0, len(split_grammar) - 1)
 
         # either replace with a single technique or the possibility
         # of recursive techniques
         flattener = "#technique#"
-        if random.random() < 0.5:
+        if ind.rng.random() < 0.5:
             flattener = "#techniques#"
         local_grammar = ExperimentSettings.grammar.flatten(flattener)
 
         split_grammar[mut_idx] = local_grammar
         mutator.grammar = ",".join(split_grammar)
-    elif random.random() < 0.9:
+    elif ind.rng.random() < 0.9:
         # Mutate an individual technique.
         split_grammar = mutator.grammar.split(",")
-        mut_idx = random.randint(0, len(split_grammar) - 1)
+        mut_idx = ind.rng.randint(0, len(split_grammar) - 1)
         #print("\tMutation Attempt:",split_grammar[mut_idx])
         gene = split_grammar[mut_idx].split(":")
         technique = gene[0]
@@ -410,66 +417,66 @@ def singlePointMutation(ind):
         # these need to become embedded within the technique itself as a
         # class
         if technique == "pixel-sort":
-            gene[1] = str(random.randint(0,
+            gene[1] = str(ind.rng.randint(0,
                                          359))  # Mutate the angle of the sort.
 
             # interval function
-            gene[2] = random.choice(
+            gene[2] = ind.rng.choice(
                 ['random', 'edges', 'threshold', 'waves', 'none'])
             # sorting function
-            gene[3] = random.choice(
+            gene[3] = ind.rng.choice(
                 ['lightness', 'hue', 'saturation', 'intensity', 'minimum'])
             # randomness val
-            gene[4] = str(round(random.uniform(0.0, 1.0), 2))
+            gene[4] = str(round(ind.rng.uniform(0.0, 1.0), 2))
             # lower threshold
-            gene[5] = str(round(random.uniform(0.0, 0.25), 2))
+            gene[5] = str(round(ind.rng.uniform(0.0, 0.25), 2))
             # upper threshold
-            gene[6] = str(round(random.uniform(0.0, 1.0), 2))
+            gene[6] = str(round(ind.rng.uniform(0.0, 1.0), 2))
 
         elif technique == "flow-field":
-            gene[1] = random.choice(["edgy", "curves"])
-            gene[2] = str(round(random.uniform(0.001, 0.5), 3))
+            gene[1] = ind.rng.choice(["edgy", "curves"])
+            gene[2] = str(round(ind.rng.uniform(0.001, 0.5), 3))
         elif technique == "flow-field-2":
-            gene[1] = random.choice(palettes)
-            gene[2] = random.choice(["edgy", "curvy"])
-            gene[3] = str(random.randint(200, 600))
-            gene[4] = str(round(random.uniform(2, 5), 2))
+            gene[1] = ind.rng.choice(palettes)
+            gene[2] = ind.rng.choice(["edgy", "curvy"])
+            gene[3] = str(ind.rng.randint(200, 600))
+            gene[4] = str(round(ind.rng.uniform(2, 5), 2))
         elif technique == "circle-packing":
-            gene[1] = random.choice(palettes)
-            gene[2] = str(random.randint(10, 30))
+            gene[1] = ind.rng.choice(palettes)
+            gene[2] = str(ind.rng.randint(10, 30))
         elif technique == "rgb-shift":
-            gene[1] = str(round(random.uniform(0.0, 1.0), 2))
-            gene[2] = str(round(random.uniform(0.0, 1.0), 2))
-            gene[3] = str(round(random.uniform(0.0, 1.0), 2))
-            gene[4] = str(random.randint(-5,5))
-            gene[5] = str(random.randint(-5,5))
-            gene[6] = str(random.randint(-5,5))
-            gene[7] = str(random.randint(-5,5))
-            gene[8] = str(random.randint(-5,5))
-            gene[9] = str(random.randint(-5,5))
+            gene[1] = str(round(ind.rng.uniform(0.0, 1.0), 2))
+            gene[2] = str(round(ind.rng.uniform(0.0, 1.0), 2))
+            gene[3] = str(round(ind.rng.uniform(0.0, 1.0), 2))
+            gene[4] = str(ind.rng.randint(-5,5))
+            gene[5] = str(ind.rng.randint(-5,5))
+            gene[6] = str(ind.rng.randint(-5,5))
+            gene[7] = str(ind.rng.randint(-5,5))
+            gene[8] = str(ind.rng.randint(-5,5))
+            gene[9] = str(ind.rng.randint(-5,5))
         elif technique == "noise-map":
-            gene[1] = random.choice(palettes)
-            gene[2] = str(round(random.uniform(0.001, 0.25), 3))
-            gene[3] = str(round(random.uniform(0.001, 0.25), 3))
-            gene[4] = str(round(random.uniform(0.0, 1.0), 2))
+            gene[1] = ind.rng.choice(palettes)
+            gene[2] = str(round(ind.rng.uniform(0.001, 0.25), 3))
+            gene[3] = str(round(ind.rng.uniform(0.001, 0.25), 3))
+            gene[4] = str(round(ind.rng.uniform(0.0, 1.0), 2))
         elif technique == "oil-painting":
-            gene[1] = str(random.randint(1,64))
+            gene[1] = str(ind.rng.randint(1,64))
         elif technique == "watercolor-filter":
-            gene[1] = str(random.randint(1, 20))
-            gene[2] = str(round(random.uniform(0.0, 0.5), 2))
+            gene[1] = str(ind.rng.randint(1, 20))
+            gene[2] = str(round(ind.rng.uniform(0.0, 0.5), 2))
         elif technique == "pencil-filter":
-            gene[1] = str(random.randint(1, 20))
-            gene[2] = str(round(random.uniform(0.0, 0.5), 2))
-            gene[3] = str(round(random.uniform(0.0, 0.05), 3))
-            gene[4] = random.choice(["on", "off"])
+            gene[1] = str(ind.rng.randint(1, 20))
+            gene[2] = str(round(ind.rng.uniform(0.0, 0.5), 2))
+            gene[3] = str(round(ind.rng.uniform(0.0, 0.05), 3))
+            gene[4] = ind.rng.choice(["on", "off"])
         elif technique == "walkers":
-            gene[1] = random.choice(palettes)
-            gene[2] = str(random.randint(10, 100))
-            gene[3] = random.choice(['ordered', 'random', 'rule'])
+            gene[1] = ind.rng.choice(palettes)
+            gene[2] = str(ind.rng.randint(10, 100))
+            gene[3] = ind.rng.choice(['ordered', 'random', 'rule'])
         elif technique == "basic-trig":
-            gene[1] = random.choice(palettes)
-            gene[2] = str(random.randint(1, 100))
-            gene[3] = random.choice(['circle', 'rect'])
+            gene[1] = ind.rng.choice(palettes)
+            gene[2] = str(ind.rng.randint(1, 100))
+            gene[3] = ind.rng.choice(['circle', 'rect'])
 
         # no params here - placeholders if we augment
         # elif technique == "stippled":
@@ -486,7 +493,7 @@ def singlePointMutation(ind):
     else:
         # Shuffle the order of techniques
         split_grammar = mutator.grammar.split(",")
-        random.shuffle(split_grammar)
+        ind.rng.shuffle(split_grammar)
         mutator.grammar = ",".join(split_grammar)
 
     return mutator
@@ -506,10 +513,11 @@ def roulette_selection(objs, obj_wts):
         sel_objs = [list(a) for a in zip(tmp_objs, tmp_wts)]
 
         # Shuffle the objectives
-        random.shuffle(sel_objs)
+        objs[0].rng.shuffle(sel_objs)
 
         # Generate a random number between 0 and 1.
-        ran_num = random.random()
+        # ran_num = random.random()
+        ran_num = objs[0].rng.random()
 
         # Iterate through the objectives until we select the one we want.
         for j in range(len(sel_objs)):
@@ -589,17 +597,17 @@ def epsilon_lexicase_selection(population,
         # at the forefront.
         if not prim_shuffle:
             fit_indicies = fit_indicies[1:]
-            random.shuffle(fit_indicies)
+            fit_indicies[0].rng.shuffle(fit_indicies)
             fit_indicies = [0] + fit_indicies
         else:
-            random.shuffle(fit_indicies)
+            fit_indicies[0].rng.shuffle(fit_indicies)
 
     # Limit the number of objectives as directed.
     if num_objectives != 0:
         fit_indicies = fit_indicies[:num_objectives]
 
     # Sample the tournsize individuals from the population for the comparison
-    sel_inds = random.sample(population, tournsize)
+    sel_inds = population[0].rng.sample(population, tournsize)
 
     tie = True
 
@@ -651,7 +659,7 @@ def epsilon_lexicase_selection(population,
     # If tie is True, we haven't selected an individual as we've reached a tie state.
     # Select randomly from the remaining individuals in that case.
     if tie:
-        selected_individual = random.choice(sel_inds)
+        selected_individual = sel_inds[0].rng.choice(sel_inds)
         Logging.lexicase_information.append([
             generation, -1, -1, [ind._id for ind in sel_inds],
             selected_individual._id
@@ -679,6 +687,6 @@ def shuffle_fit_indicies(individual, excl_indicies=[]):
     # Remove excluded indicies
     fit_indicies = [i for i in fit_indicies if i not in excl_indicies]
 
-    random.shuffle(fit_indicies)
+    fit_indicies[0].rng.shuffle(fit_indicies)
 
     glob_fit_indicies = fit_indicies

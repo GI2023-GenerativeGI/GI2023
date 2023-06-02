@@ -71,10 +71,13 @@ if __name__ == '__main__':
     with open("{}/{}/{}/commandline_args.txt".format(args.output_path,args.treatment,args.run_num), 'w') as f:
         json.dump(args.__dict__, f, indent=2)
 
-    evol_utils.args = args
 
     # Seed only the evolutionary runs.
     random.seed(args.run_num)
+    shared_rng = random.Random(args.run_num)
+
+    evol_utils.args = args
+    evol_utils.rng = shared_rng
     
     # Establish name of the output files and write appropriate headers.
     out_fit_file = "{}/{}/{}/{}_{}_fitnesses.dat".format(args.output_path,args.treatment,args.run_num,args.treatment,args.run_num)
@@ -122,6 +125,7 @@ if __name__ == '__main__':
     # Request new id's for the population.
     for ind in pop:
         ind.get_new_id()
+        ind.setRNG(shared_rng)
 
     # If we have a prior population, use those genomes
     # otherwise run generation 0.
@@ -169,7 +173,8 @@ if __name__ == '__main__':
 
         # Select the rest of the children either with crossover or cloning.
         for i in range(args.pop_size):
-            if random.random() < cxpb:
+            # if random.random() < cxpb:
+            if shared_rng.random() < cxpb:
                 # Crossover
                 par_1 = toolbox.select(pop,g)
                 par_2 = toolbox.select(pop,g)
@@ -187,6 +192,7 @@ if __name__ == '__main__':
         # Request new id's for the population.
         for ind in pop:
             ind.get_new_id()
+            ind.setRNG(shared_rng)
 
         for mutant in pop:
             toolbox.mutate(mutant)
@@ -254,7 +260,8 @@ if __name__ == '__main__':
                 # for ind in pop:
                 #     ind.get_new_id()
 
-            pop = [toolbox.clone(random.choice(pop)) for _ in range(args.pop_size-len(pop))]
+            # pop = [toolbox.clone(random.choice(pop)) for _ in range(args.pop_size-len(pop))]
+            pop = [toolbox.clone(shared_rng.choice(pop)) for _ in range(args.pop_size-len(pop))]
             # for _ in range(args.pop_size - len(pop)):
             #     mutant = toolbox.clone(random.choice(pop))
             for mutant in pop:
@@ -265,6 +272,7 @@ if __name__ == '__main__':
             # Request new id's for the population.
             for ind in pop:
                 ind.get_new_id()
+                ind.setRNG(shared_rng)
 
             ids_to_save = []
 
