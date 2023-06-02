@@ -36,7 +36,7 @@ class ExperimentSettings(object):
     treatments = [
         "baseline",  #0
     ]
-    num_objectives = 3
+    num_objectives = 5
 
     rules = rules
     grammar = tracery.Grammar(rules)

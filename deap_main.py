@@ -34,10 +34,10 @@ def evaluate_ind(g):
     return evol_utils.evaluate_individual(g)
     
 def getFitnesses(_pop):
-    return [[p_c, g_c, u_c, c_c] for p_c, g_c, u_c, c_c in zip(evol_utils.pairwiseComparison(_pop), evol_utils.uniqueGeneCount(_pop), evol_utils.numUniqueTechniques(_pop), evol_utils.chebyshev(_pop))]
+    return [[p_c, g_c, u_c, c_c, neg_sp] for p_c, g_c, u_c, c_c, neg_sp in zip(evol_utils.pairwiseComparison(_pop), evol_utils.uniqueGeneCount(_pop), evol_utils.numUniqueTechniques(_pop), evol_utils.chebyshev(_pop), evol_utils.score_negative_space(_pop))]
 
 # Initial Fitnesses: 
-creator.create("Fitness", base.Fitness, weights=([1.0,-1.0, 1.0, 1.0]))
+creator.create("Fitness", base.Fitness, weights=([1.0,-1.0, 1.0, 1.0, -1.0]))
 creator.create("Individual", GenerativeObject, fitness=creator.Fitness)
 
 if __name__ == '__main__': 
