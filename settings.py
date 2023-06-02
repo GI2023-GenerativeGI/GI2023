@@ -4,7 +4,7 @@ from colour_palettes import palettes
 
 # tbd: palettes in other techniques!
 
-DIM = (1000, 1000)
+DIM = (500,500)#(1000, 1000)
 BACKGROUND = 'black'
 
 # tracery grammar

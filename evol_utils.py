@@ -337,6 +337,113 @@ def numUniqueTechniques(_population):
         fitnesses.append(len(set(techniques)))
     return fitnesses
 
+# Source: https://stackoverflow.com/a/52879133
+def score_triadic_color_alignment(_population):
+  """ Score each individual based on their triadic color palette.  Find the dominant color in an image 
+      and then identify the three complimentary colors.  Returned score will be how closely the three 
+      primary colors in the image align with a triadic color palette.  
+  """
+  fitnesses = []
+  
+  for p in _population:
+      
+    # Resize the image if we want to save time.
+    #Resizing parameters
+    width, height = 150, 150
+    image = p.image.copy()
+    image.thumbnail((width, height), resample=0)
+    
+    # Good explanation of how HSV works to find complimentary colors.
+    # https://stackoverflow.com/a/69880467
+    image.convert('HSV')
+    
+    #image = image.resize((width, height), resample = 0)
+    #Get colors from image object
+    pixels = image.getcolors(width * height)
+    #Sort them by count number(first element of tuple)
+    sorted_pixels = sorted(pixels, key=lambda t: t[0])
+    
+    # Get the most frequent colors
+    # Filter out black if it is the dominant color since our background is black.
+    top_colors = sorted_pixels[-4:]
+    if top_colors[-1][1] == (0,0,0,255):
+        top_colors = top_colors[:-1]
+    else:
+        top_colors = top_colors[-2:]
+        
+    # Sort the colors by hue (ascending).
+    top_colors = sorted(top_colors, key=lambda x: x[1][0])
+    
+    # Assess how closely the three colors hue align with a 60 degree separation.
+    # This would be a difference of 85 in the HSV hue value between each color.
+    if len(top_colors) > 2:
+        avg_distance = sum([math.fabs(top_colors[i][1][0] - top_colors[(i+1)%3][1][0]) if i != 2 else math.fabs(255-top_colors[i][1][0] + top_colors[(i+1)%3][1][0]) for i in range(3)])/3
+    else:
+        avg_distance = 255
+    
+    fitnesses.append(math.fabs(255/3 - avg_distance))
+
+  return fitnesses
+
+# Source: https://stackoverflow.com/a/52879133
+def hsv_color_list(image):
+  """ Get the list of colors present in an image object by HSV value.  
+  """
+  # Resize the image if we want to save time.
+  #Resizing parameters
+  width, height = image.width, image.height
+  image = image.copy()
+  image.thumbnail((width, height), resample=0)
+  
+  # Good explanation of how HSV works to find complimentary colors.
+  # https://stackoverflow.com/a/69880467
+  image.convert('HSV')
+  
+  #image = image.resize((width, height), resample = 0)
+  #Get colors from image object
+  pixels = image.getcolors(width * height)
+  #Sort them by count number(first element of tuple)
+  sorted_pixels = sorted(pixels, key=lambda t: t[0])
+  
+  for color in sorted_pixels:
+    print(color)
+    
+  # Print the total number of pixels.
+  print(sum([color[0] for color in sorted_pixels]))
+  return sorted_pixels
+  
+def score_negative_space(_population, target_percent=.7, primary_black=True):
+  """ Score each individual based on their negative space compared to a target percentage.  
+    Assess how closely the provided image matches the target percentage for negative space. 
+  
+  Args:
+    _population: list of individuals to score
+    target_percent: target percentage of negative space in the image
+    primary_black: boolean indicating whether the primary color should be black or the top color in the image.
+  """
+  fitnesses = []
+  
+  for p in _population:
+    color_distribution = hsv_color_list(p.image)
+  
+    total_pixels = sum([color[0] for color in color_distribution])
+  
+    negative_space_pixels = 0
+    if primary_black:
+        # The primary color is black, so the negative space is whatever the distribution of black is.
+        for color in color_distribution:
+            if color[1] == (0,0,0,255):
+                negative_space_pixels = color[0]
+                break
+            else:
+                # The primary color is not black, so the negative space is whatever the distribution of the top color is.
+                negative_space_pixels = color[0]
+    
+    negative_space_percent = negative_space_pixels / total_pixels
+  
+    fitnesses.append(math.fabs(target_percent - negative_space_percent))
+
+  return fitnesses
 
 # Perform single-point crossover
 def singlePointCrossover(ind1, ind2):
@@ -582,6 +689,8 @@ def epsilon_lexicase_selection(population,
     """
     global glob_fit_indicies
 
+    rng = population[0].rng
+
     # Get the fit indicies from the global fit indicies.
     fit_indicies = glob_fit_indicies if not shuffle else [
         i for i in range(len(population[0].fitness.weights))
@@ -597,17 +706,17 @@ def epsilon_lexicase_selection(population,
         # at the forefront.
         if not prim_shuffle:
             fit_indicies = fit_indicies[1:]
-            fit_indicies[0].rng.shuffle(fit_indicies)
+            rng.shuffle(fit_indicies)
             fit_indicies = [0] + fit_indicies
         else:
-            fit_indicies[0].rng.shuffle(fit_indicies)
+            rng.shuffle(fit_indicies)
 
     # Limit the number of objectives as directed.
     if num_objectives != 0:
         fit_indicies = fit_indicies[:num_objectives]
 
     # Sample the tournsize individuals from the population for the comparison
-    sel_inds = population[0].rng.sample(population, tournsize)
+    sel_inds = rng.sample(population, tournsize)
 
     tie = True
 
@@ -659,7 +768,7 @@ def epsilon_lexicase_selection(population,
     # If tie is True, we haven't selected an individual as we've reached a tie state.
     # Select randomly from the remaining individuals in that case.
     if tie:
-        selected_individual = sel_inds[0].rng.choice(sel_inds)
+        selected_individual = rng.choice(sel_inds)
         Logging.lexicase_information.append([
             generation, -1, -1, [ind._id for ind in sel_inds],
             selected_individual._id
@@ -687,6 +796,6 @@ def shuffle_fit_indicies(individual, excl_indicies=[]):
     # Remove excluded indicies
     fit_indicies = [i for i in fit_indicies if i not in excl_indicies]
 
-    fit_indicies[0].rng.shuffle(fit_indicies)
+    individual.rng.shuffle(fit_indicies)
 
     glob_fit_indicies = fit_indicies
