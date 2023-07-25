@@ -2,6 +2,10 @@
 
 Genetic algorithm / novelty search for discovering generative artwork via evolving a grammar-based solution.
 
+## ASE-GI Results
+
+All of our results published in the paper are hosted on [Zenodo](https://zenodo.org/record/8170436).  This archive comprises all output images from each evolutionary run as well as the population data per-replicate.
+
 ## Usage
 
 I used Python 3.8, though it should work for most current versions of Python.
