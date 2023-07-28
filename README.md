@@ -10,7 +10,13 @@ All of our results published in the paper are hosted on [Zenodo](https://zenodo.
 
 I used Python 3.8, though it should work for most current versions of Python.
 
-1. Install required libraries: `python3 -m pip install -r requirements.txt`
+1. Install required libraries: 
+
+* `python3 -m pip install -r requirements.txt`
+
+Note, the following system dependency is also required:
+
+* tkinter (`sudo apt install python3-tk` on Debian-based systems).
 
 2. Run: `python3 deap_main.py [args]`
 
